@@ -1,13 +1,13 @@
 @EndUserText.label: 'Praxedo Adapter – Administration'
 define service ZCPRX_UI_ADMIN {
-  expose ZCPRX_C_Order          as PraxedoOrder;  // "Order" ist reserviert
-  expose ZCPRX_C_OrderTime      as OrderTime;
-  expose ZCPRX_C_OrderMaterial  as OrderMaterial;
-  expose ZCPRX_C_Product        as Product;
-  expose ZCPRX_C_ProductGroup   as ProductGroup;
-  expose ZCPRX_C_EquipmentType  as EquipmentType;
-  expose ZCPRX_C_Queue          as Queue;
-  expose ZCPRX_I_OrderStatusVH  as OrderStatusVH;
-  expose ZCPRX_I_SyncStatusVH   as SyncStatusVH;
-  expose ZCPRX_I_QueueStatusVH  as QueueStatusVH;
+  expose ZCPRX_C_Order         as PraxedoOrder;
+  expose ZCPRX_C_OrderTime     as OrderTime;
+  expose ZCPRX_C_OrderMaterial as OrderMaterial;
+  expose ZCPRX_C_Product       as Product;
+  expose ZCPRX_C_ProductGroup  as ProductGroup;
+  expose ZCPRX_C_EquipmentType as EquipmentType;
+  expose ZCPRX_C_Queue         as Queue;
+  expose ZCPRX_I_OrderStatusVH as OrderStatusVH;
+  expose ZCPRX_I_SyncStatusVH  as SyncStatusVH;
+  expose ZCPRX_I_QueueStatusVH as QueueStatusVH;
 }

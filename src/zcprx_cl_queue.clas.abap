@@ -295,13 +295,13 @@ CLASS zcprx_cl_queue IMPLEMENTATION.
         NEW zcprx_cl_outbound( )->sync_service_order( CONV #( is_queue-object_key ) ).
 
       WHEN ot-product.
-        NEW zcprx_cl_masterdata( )->send_products( VALUE #( ( CONV #( is_queue-object_key ) ) ) ).
+        NEW zcprx_cl_masterdata( )->send_products( it_keys = VALUE #( ( CONV #( is_queue-object_key ) ) ) ).
 
       WHEN ot-product_group.
-        NEW zcprx_cl_masterdata( )->send_product_groups( VALUE #( ( CONV #( is_queue-object_key ) ) ) ).
+        NEW zcprx_cl_masterdata( )->send_product_groups( it_keys = VALUE #( ( CONV #( is_queue-object_key ) ) ) ).
 
       WHEN ot-equipment_type.
-        NEW zcprx_cl_masterdata( )->send_equipment_types( VALUE #( ( CONV #( is_queue-object_key ) ) ) ).
+        NEW zcprx_cl_masterdata( )->send_equipment_types( it_keys = VALUE #( ( CONV #( is_queue-object_key ) ) ) ).
 
       WHEN OTHERS.
         zcprx_cx_error=>raise( iv_text = |Unbekannter Objekttyp { is_queue-object_type }| iv_permanent = abap_true ).
