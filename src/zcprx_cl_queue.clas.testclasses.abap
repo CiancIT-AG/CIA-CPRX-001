@@ -39,7 +39,7 @@ CLASS ltcl_queue IMPLEMENTATION.
   METHOD to_uuid_rejects_invalid.
     TRY.
         zcprx_cl_queue=>to_uuid( 'KEINE-UUID' ).
-        cl_abap_unit_assert=>fail( 'Ausnahme erwartet' ).
+        cl_abap_unit_assert=>fail( msg = 'Ausnahme erwartet' ).
       CATCH zcprx_cx_error INTO DATA(lx_error).
         cl_abap_unit_assert=>assert_true( act = lx_error->mv_permanent
                                           msg = 'Ungültiger Schlüssel muss dauerhaft sein (kein Retry)' ).

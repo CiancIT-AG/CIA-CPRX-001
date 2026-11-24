@@ -10,7 +10,7 @@ authorization master ( global )
 etag master LocalLastChangedAt
 {
   field ( readonly : update, mandatory : create ) ProductGroup;
-  field ( readonly ) PraxedoId, Status, LastSentAt, MessageText,
+  field ( readonly ) ProductGroupName, PraxedoId, Status, LastSentAt, MessageText,
                      CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, LocalLastChangedAt;
 
   create;          // Admin-App (Draft) und Job/EML
@@ -19,8 +19,8 @@ etag master LocalLastChangedAt
 
   static action loadFromSap;
   action ( features : instance ) sendToPraxedo result [1] $self;
-  action ( features : instance ) activate      result [1] $self;
-  action ( features : instance ) deactivate    result [1] $self;
+  action ( features : instance ) setActive      result [1] $self;
+  action ( features : instance ) setInactive    result [1] $self;
   action setSyncResult parameter ZCPRX_A_SyncResult result [1] $self;
 
   draft action Edit;

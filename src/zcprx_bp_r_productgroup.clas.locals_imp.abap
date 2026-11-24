@@ -14,10 +14,10 @@ CLASS lhc_productgroup DEFINITION INHERITING FROM cl_abap_behavior_handler.
       IMPORTING keys FOR ACTION ProductGroup~loadFromSap.
     METHODS sendtopraxedo FOR MODIFY
       IMPORTING keys FOR ACTION ProductGroup~sendToPraxedo RESULT result.
-    METHODS activate FOR MODIFY
-      IMPORTING keys FOR ACTION ProductGroup~activate RESULT result.
-    METHODS deactivate FOR MODIFY
-      IMPORTING keys FOR ACTION ProductGroup~deactivate RESULT result.
+    METHODS setActive FOR MODIFY
+      IMPORTING keys FOR ACTION ProductGroup~setActive RESULT result.
+    METHODS setInactive FOR MODIFY
+      IMPORTING keys FOR ACTION ProductGroup~setInactive RESULT result.
     METHODS setsyncresult FOR MODIFY
       IMPORTING keys FOR ACTION ProductGroup~setSyncResult RESULT result.
 ENDCLASS.
@@ -35,8 +35,8 @@ CLASS lhc_productgroup IMPLEMENTATION.
                       %delete                = lv_delete
                       %action-loadFromSap    = lv_execute
                       %action-sendToPraxedo  = lv_execute
-                      %action-activate       = lv_execute
-                      %action-deactivate     = lv_execute
+                      %action-setActive       = lv_execute
+                      %action-setInactive     = lv_execute
                       %action-setSyncResult  = lv_execute ).
   ENDMETHOD.
 
@@ -51,9 +51,9 @@ CLASS lhc_productgroup IMPLEMENTATION.
       ( %tky                  = d-%tky
         %action-sendToPraxedo = COND #( WHEN active_instance = abap_true AND d-IsActive = abap_true
                                         THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled )
-        %action-activate      = COND #( WHEN active_instance = abap_true AND d-IsActive = abap_false
+        %action-setActive      = COND #( WHEN active_instance = abap_true AND d-IsActive = abap_false
                                         THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled )
-        %action-deactivate    = COND #( WHEN active_instance = abap_true AND d-IsActive = abap_true
+        %action-setInactive    = COND #( WHEN active_instance = abap_true AND d-IsActive = abap_true
                                         THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled ) ) ).
   ENDMETHOD.
 
@@ -102,7 +102,7 @@ CLASS lhc_productgroup IMPLEMENTATION.
     result = VALUE #( FOR r IN lt_result ( %tky = r-%tky %param = r ) ).
   ENDMETHOD.
 
-  METHOD activate.
+  METHOD setActive.
     MODIFY ENTITIES OF zcprx_r_productgroup IN LOCAL MODE
       ENTITY ProductGroup UPDATE FIELDS ( IsActive )
       WITH VALUE #( FOR k IN keys ( %tky = k-%tky IsActive = abap_true ) ).
@@ -111,7 +111,7 @@ CLASS lhc_productgroup IMPLEMENTATION.
     result = VALUE #( FOR r IN lt_result ( %tky = r-%tky %param = r ) ).
   ENDMETHOD.
 
-  METHOD deactivate.
+  METHOD setInactive.
     MODIFY ENTITIES OF zcprx_r_productgroup IN LOCAL MODE
       ENTITY ProductGroup UPDATE FIELDS ( IsActive )
       WITH VALUE #( FOR k IN keys ( %tky = k-%tky IsActive = abap_false ) ).

@@ -11,8 +11,8 @@ use etag
 
   use action loadFromSap;
   use action sendToPraxedo;
-  use action activate;
-  use action deactivate;
+  use action setActive;
+  use action setInactive;
 
   use action Edit;
   use action Activate;

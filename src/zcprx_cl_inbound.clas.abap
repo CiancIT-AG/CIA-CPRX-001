@@ -150,8 +150,8 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
       DATA(lv_default_product) = zcprx_cl_config=>get( zcprx_cl_config=>c_param-default_srv_product ).
 
       MODIFY ENTITIES OF zcprx_r_order
-        ENTITY OrderTime     DELETE FROM VALUE #( FOR t IN lt_time     ( %tky = t-%tky ) )
-        ENTITY OrderMaterial DELETE FROM VALUE #( FOR m IN lt_material ( %tky = m-%tky ) )
+        ENTITY OrderTime     DELETE FROM VALUE #( FOR old_t IN lt_time     ( %tky = old_t-%tky ) )
+        ENTITY OrderMaterial DELETE FROM VALUE #( FOR old_m IN lt_material ( %tky = old_m-%tky ) )
         ENTITY Order
           CREATE BY \_Time
             FIELDS ( PraxedoLineId Technician ServiceProduct StartAt EndAt Duration DurationUnit )

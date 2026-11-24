@@ -15,6 +15,7 @@ define root view entity ZCPRX_C_Order
       ServiceOrderItem,
       @Search.defaultSearchElement: true
       Description,
+      @ObjectModel.text.element: [ 'SoldToPartyName' ]
       SoldToParty,
       _SoldToParty.CustomerName as SoldToPartyName,
       ShipToParty,
@@ -22,6 +23,7 @@ define root view entity ZCPRX_C_Order
       Technician,
       PlannedStart,
       PlannedEnd,
+      @ObjectModel.text.element: [ 'StatusText' ]
       Status,
       _StatusText.StatusText    as StatusText,
       PraxedoStatus,

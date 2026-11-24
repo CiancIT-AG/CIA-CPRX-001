@@ -1,6 +1,6 @@
 @EndUserText.label: 'Praxedo Adapter – Administration'
 define service ZCPRX_UI_ADMIN {
-  expose ZCPRX_C_Order          as Order;
+  expose ZCPRX_C_Order          as PraxedoOrder;  // "Order" ist reserviert
   expose ZCPRX_C_OrderTime      as OrderTime;
   expose ZCPRX_C_OrderMaterial  as OrderMaterial;
   expose ZCPRX_C_Product        as Product;

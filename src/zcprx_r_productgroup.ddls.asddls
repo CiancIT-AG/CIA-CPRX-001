@@ -6,7 +6,7 @@ define root view entity ZCPRX_R_ProductGroup
   association [0..1] to ZCPRX_I_SyncStatusVH as _StatusText on $projection.Status = _StatusText.Status
 {
   key product_group                                                    as ProductGroup,
-      _Text[1: Language = $session.system_language].ProductGroupName as ProductGroupName,
+      cast( _Text[1: Language = $session.system_language].ProductGroupName as abap.char(60) ) as ProductGroupName, // Built-in-Typ für die Draft-Tabelle
       is_active                                                        as IsActive,
       praxedo_id                                                       as PraxedoId,
       status                                                           as Status,

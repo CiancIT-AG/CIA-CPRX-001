@@ -41,7 +41,6 @@ annotate entity ZCPRX_C_Order with
   @EndUserText.label: 'Beschreibung'
   Description;
 
-  @ObjectModel.text.element: [ 'SoldToPartyName' ]
   @Consumption.valueHelpDefinition: [{ entity: { name: 'I_Customer_VH', element: 'Customer' } }]
   @UI: { lineItem: [{ position: 40 }], identification: [{ position: 40 }], selectionField: [{ position: 30 }] }
   @EndUserText.label: 'Auftraggeber'
@@ -69,7 +68,6 @@ annotate entity ZCPRX_C_Order with
   @EndUserText.label: 'Geplantes Ende'
   PlannedEnd;
 
-  @ObjectModel.text.element: [ 'StatusText' ]
   @Consumption.valueHelpDefinition: [{ entity: { name: 'ZCPRX_I_OrderStatusVH', element: 'Status' } }]
   @UI: { lineItem: [{ position: 80, importance: #HIGH, criticality: 'StatusCriticality' }],
          fieldGroup: [{ qualifier: 'Sync', position: 10, criticality: 'StatusCriticality' }],

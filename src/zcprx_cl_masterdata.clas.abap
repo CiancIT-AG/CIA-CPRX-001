@@ -191,8 +191,8 @@ CLASS zcprx_cl_masterdata IMPLEMENTATION.
         DATA(ls_product) = lt_products[ lv_from + sy-index - 1 ].
         READ TABLE lt_existing WITH KEY Product = ls_product-Product BINARY SEARCH TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
-          APPEND VALUE #( %cid = |P{ sy-index }| Product = ls_product-Product
-                          Status = zcprx_if_constants=>sync_status-new ) TO lt_create.
+          " Status ist read-only; er wird direkt danach per setSyncResult gesetzt
+          APPEND VALUE #( %cid = |P{ sy-index }| Product = ls_product-Product ) TO lt_create.
         ENDIF.
         APPEND VALUE #( Product = ls_product-Product
                         %param  = result_for( it_result = lt_result iv_key = ls_product-Product ) ) TO lt_exec.
@@ -200,7 +200,7 @@ CLASS zcprx_cl_masterdata IMPLEMENTATION.
 
       IF lt_create IS NOT INITIAL.
         MODIFY ENTITIES OF zcprx_r_product
-          ENTITY Product CREATE FIELDS ( Product Status ) WITH lt_create
+          ENTITY Product CREATE FIELDS ( Product ) WITH lt_create
           FAILED DATA(ls_create_failed) ##NEEDED.
         COMMIT ENTITIES.
       ENDIF.

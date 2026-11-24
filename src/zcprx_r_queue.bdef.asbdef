@@ -10,6 +10,7 @@ etag master LocalLastChangedAt
   field ( readonly ) QueueUUID, ObjectType, ObjectKey, Operation, Status, RetryCount,
                      MessageText, CreatedAt, StartedAt, NextRetryAt, ProcessedAt,
                      StatusCriticality, LastChangedAt, LocalLastChangedAt;
+  internal update;   // nur für die Action retry (IN LOCAL MODE)
   delete;
   action ( features : instance ) retry result [1] $self;
 

@@ -6,7 +6,7 @@ define root view entity ZCPRX_R_EquipmentType
   association [0..1] to ZCPRX_I_SyncStatusVH  as _StatusText on $projection.Status = _StatusText.Status
 {
   key equipment_type                                                           as EquipmentType,
-      _Text[1: Language = $session.system_language].TechnicalObjectTypeDesc as EquipmentTypeName,
+      cast( _Text[1: Language = $session.system_language].TechnicalObjectTypeDesc as abap.char(40) ) as EquipmentTypeName, // Built-in-Typ: Draft-Tabelle darf kein nicht freigegebenes Datenelement nutzen
       is_active                                                                as IsActive,
       praxedo_id                                                               as PraxedoId,
       status                                                                   as Status,

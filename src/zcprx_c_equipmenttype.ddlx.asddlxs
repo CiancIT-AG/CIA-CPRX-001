@@ -3,12 +3,11 @@
 annotate entity ZCPRX_C_EquipmentType with
 {
   @UI.facet: [{ id: 'EQT', purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE, label: 'Equipmenttyp', position: 10 }]
-  @ObjectModel.text.element: [ 'EquipmentTypeName' ]
   @UI: { lineItem: [{ position: 10 },
                     { type: #FOR_ACTION, dataAction: 'loadFromSap',   label: 'Aus SAP übernehmen' },
                     { type: #FOR_ACTION, dataAction: 'sendToPraxedo', label: 'An Praxedo senden' },
-                    { type: #FOR_ACTION, dataAction: 'activate',      label: 'Aktivieren' },
-                    { type: #FOR_ACTION, dataAction: 'deactivate',    label: 'Deaktivieren' }],
+                    { type: #FOR_ACTION, dataAction: 'setActive',      label: 'Aktivieren' },
+                    { type: #FOR_ACTION, dataAction: 'setInactive',    label: 'Deaktivieren' }],
          identification: [{ position: 10 }],
          selectionField: [{ position: 10 }] }
   @EndUserText.label: 'Equipmenttyp'
@@ -16,7 +15,6 @@ annotate entity ZCPRX_C_EquipmentType with
   @UI: { lineItem: [{ position: 20 }], identification: [{ position: 20 }] }
   @EndUserText.label: 'Aktiv'
   IsActive;
-  @ObjectModel.text.element: [ 'StatusText' ]
   @Consumption.valueHelpDefinition: [{ entity: { name: 'ZCPRX_I_SyncStatusVH', element: 'Status' } }]
   @UI: { lineItem: [{ position: 30 }], identification: [{ position: 30 }], selectionField: [{ position: 20 }] }
   @EndUserText.label: 'Status'

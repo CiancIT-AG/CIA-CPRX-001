@@ -223,8 +223,8 @@ CLASS zcprx_cl_installer IMPLEMENTATION.
       TRY.
           cl_apj_rt_api=>schedule_job(
             EXPORTING
-              iv_job_template_name   = ls_job-template
-              iv_job_text            = ls_job-text
+              iv_job_template_name   = CONV #( ls_job-template )
+              iv_job_text            = CONV #( ls_job-text )
               is_start_info          = VALUE #( start_immediately = xsdbool( ls_job-start_time IS INITIAL )
                                                 timestamp         = COND #( WHEN ls_job-start_time IS NOT INITIAL
                                                                             THEN next_start( ls_job-start_time ) ) )

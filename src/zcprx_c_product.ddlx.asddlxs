@@ -3,7 +3,6 @@
 annotate entity ZCPRX_C_Product with
 {
   @UI.facet: [{ id: 'Prod', purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE, label: 'Artikel', position: 10 }]
-  @ObjectModel.text.element: [ 'ProductDescription' ]
   @UI: { lineItem: [{ position: 10 }, { type: #FOR_ACTION, dataAction: 'sendToPraxedo', label: 'An Praxedo senden' }],
          identification: [{ position: 10 }, { type: #FOR_ACTION, dataAction: 'sendToPraxedo', label: 'An Praxedo senden' }],
          selectionField: [{ position: 10 }] }
@@ -15,7 +14,6 @@ annotate entity ZCPRX_C_Product with
   @UI: { lineItem: [{ position: 30 }], identification: [{ position: 30 }] }
   @EndUserText.label: 'Artikelart'
   ProductType;
-  @ObjectModel.text.element: [ 'StatusText' ]
   @Consumption.valueHelpDefinition: [{ entity: { name: 'ZCPRX_I_SyncStatusVH', element: 'Status' } }]
   @UI: { lineItem: [{ position: 40 }], identification: [{ position: 40 }], selectionField: [{ position: 30 }] }
   @EndUserText.label: 'Status'

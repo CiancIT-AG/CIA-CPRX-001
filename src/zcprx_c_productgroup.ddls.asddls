@@ -6,10 +6,12 @@ define root view entity ZCPRX_C_ProductGroup
   provider contract transactional_query
   as projection on ZCPRX_R_ProductGroup
 {
+  @ObjectModel.text.element: [ 'ProductGroupName' ]
   key ProductGroup,
       ProductGroupName,
       IsActive,
       PraxedoId,
+      @ObjectModel.text.element: [ 'StatusText' ]
       Status,
       _StatusText.StatusText as StatusText,
       LastSentAt,

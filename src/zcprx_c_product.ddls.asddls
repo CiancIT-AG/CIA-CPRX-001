@@ -7,12 +7,14 @@ define root view entity ZCPRX_C_Product
   as projection on ZCPRX_R_Product
 {
       @Search.defaultSearchElement: true
+  @ObjectModel.text.element: [ 'ProductDescription' ]
   key Product,
       @Search.defaultSearchElement: true
       ProductDescription,
       ProductGroup,
       ProductType,
       PraxedoId,
+      @ObjectModel.text.element: [ 'StatusText' ]
       Status,
       _StatusText.StatusText as StatusText,
       LastSentAt,
