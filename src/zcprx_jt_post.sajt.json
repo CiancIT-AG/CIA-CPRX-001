@@ -1,0 +1,19 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "Praxedo: Einsätze verbuchen",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "catalogName": "ZCPRX_JCE_POST"
+  },
+  "parameters": {
+    "singleValueParameters": [
+      {
+        "name": "P_MAX",
+        "value": "000500"
+      }
+    ]
+  }
+}

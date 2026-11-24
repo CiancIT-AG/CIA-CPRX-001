@@ -1,0 +1,20 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "Praxedo: Tagesbericht lesen",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "className": "ZCPRX_CL_JOB_REPORT"
+  },
+  "parameters": [
+    {
+      "name": "P_REPID",
+      "mandatory": true
+    },
+    {
+      "name": "P_DATE"
+    }
+  ]
+}

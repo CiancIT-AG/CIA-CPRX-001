@@ -1,0 +1,19 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "Praxedo: Serviceaufträge senden",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "className": "ZCPRX_CL_JOB_OUTBOUND"
+  },
+  "parameters": [
+    {
+      "name": "P_DELTA"
+    },
+    {
+      "name": "P_MAXQ"
+    }
+  ]
+}

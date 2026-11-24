@@ -1,0 +1,31 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "Praxedo: Setup und Installation",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "catalogName": "ZCPRX_JCE_SETUP"
+  },
+  "parameters": {
+    "singleValueParameters": [
+      {
+        "name": "P_FORCE",
+        "value": ""
+      },
+      {
+        "name": "P_JOBS",
+        "value": "X"
+      },
+      {
+        "name": "P_MD",
+        "value": "X"
+      },
+      {
+        "name": "P_MODE",
+        "value": "I"
+      }
+    ]
+  }
+}

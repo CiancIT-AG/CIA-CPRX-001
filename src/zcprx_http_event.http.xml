@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_HTTP" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <HTTPID>ZCPRX_HTTP_EVENT</HTTPID>
+   <HTTPTEXT>
+    <ID>ZCPRX_HTTP_EVENT</ID>
+    <VERSION>I</VERSION>
+    <LANG>E</LANG>
+    <SHORTTEXT>Praxedo: Webhook Business Event Serviceauftrag</SHORTTEXT>
+   </HTTPTEXT>
+   <HTTPHDL>
+    <UCONSERVHANDLER>
+     <ID>ZCPRX_HTTP_EVENT</ID>
+     <VERSION>I</VERSION>
+     <SERVICEORDER>01</SERVICEORDER>
+     <SERVICEHANDLER>ZCL_CPRX_HTTP_EVENT</SERVICEHANDLER>
+    </UCONSERVHANDLER>
+   </HTTPHDL>
+  </asx:values>
+ </asx:abap>
+</abapGit>

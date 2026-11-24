@@ -1,0 +1,5 @@
+@ObjectModel.leadingEntity.name: 'ZCPRX_BCM_I'
+define service ZCPRX_BCM_UI {
+  expose ZCPRX_BCM_I as PraxedoKonfiguraAll;
+  expose ZI_PRAXEDOKONFIGURATIO as PraxedoKonfiguratio;
+}

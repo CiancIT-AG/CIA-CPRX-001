@@ -1,0 +1,26 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "Praxedo: Setup und Installation",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "className": "ZCPRX_CL_JOB_SETUP"
+  },
+  "parameters": [
+    {
+      "name": "P_MODE",
+      "mandatory": true
+    },
+    {
+      "name": "P_MD"
+    },
+    {
+      "name": "P_JOBS"
+    },
+    {
+      "name": "P_FORCE"
+    }
+  ]
+}

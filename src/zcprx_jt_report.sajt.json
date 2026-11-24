@@ -1,0 +1,23 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "Praxedo: Tagesbericht lesen",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "generalInformation": {
+    "catalogName": "ZCPRX_JCE_REPORT"
+  },
+  "parameters": {
+    "singleValueParameters": [
+      {
+        "name": "P_DATE",
+        "value": ""
+      },
+      {
+        "name": "P_REPID",
+        "value": "DAILY"
+      }
+    ]
+  }
+}

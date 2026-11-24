@@ -1,0 +1,41 @@
+{
+  "formatVersion": "1",
+  "header": {
+    "description": "Maintain Praxedo: Konfiguration",
+    "originalLanguage": "en",
+    "abapLanguageVersion": "cloudDevelopment"
+  },
+  "serviceConfiguration": {
+    "serviceBinding": "ZCPRX_BCM_UI_O4",
+    "serviceName": "ZCPRX_BCM_UI_O4",
+    "serviceVersion": "0001",
+    "rootEntitySet": "PraxedoKonfiguraAll",
+    "name": "Praxedo: Konfiguration",
+    "transportObject": "ZCPRX_BCM_CFGT",
+    "configurationGroup": "",
+    "skipRootEntity": true
+  },
+  "appConfiguration": {
+    "listReport": {},
+    "objectPages": [
+      {
+        "entitySet": "PraxedoKonfiguraAll",
+        "variantManagement": "control",
+        "showTransportSelectionStrip": true
+      }
+    ],
+    "tableSettings": [
+      {
+        "entitySet": "PraxedoKonfiguratio",
+        "tableType": "gridTable",
+        "selectAll": true,
+        "rowCountMode": "auto",
+        "frozenColumnCount": 1,
+        "creationModeName": "inlineCreationRows",
+        "createAtEnd": true,
+        "condensedTableLayout": true,
+        "widthIncludingColumnHeader": true
+      }
+    ]
+  }
+}
