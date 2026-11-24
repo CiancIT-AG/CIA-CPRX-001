@@ -1,0 +1,42 @@
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZCPRX_C_Order alias Order
+use etag
+{
+  use create;
+  use update;
+  use delete;
+
+  use action sendToPraxedo;
+  use action fetchFromPraxedo;
+  use action post;
+  use action resetError;
+  use action cancel;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use association _Time     { create; with draft; }
+  use association _Material { create; with draft; }
+}
+
+define behavior for ZCPRX_C_OrderTime alias OrderTime
+use etag
+{
+  use update;
+  use delete;
+  use association _Order { with draft; }
+}
+
+define behavior for ZCPRX_C_OrderMaterial alias OrderMaterial
+use etag
+{
+  use update;
+  use delete;
+  use association _Order { with draft; }
+}

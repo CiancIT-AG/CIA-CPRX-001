@@ -1,0 +1,5 @@
+CLASS zcprx_bp_r_product DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zcprx_r_product.
+ENDCLASS.
+
+CLASS zcprx_bp_r_product IMPLEMENTATION.
+ENDCLASS.

@@ -1,0 +1,123 @@
+@Metadata.layer: #CUSTOMER
+@UI: {
+  headerInfo: { typeName: 'Einsatz', typeNamePlural: 'Einsätze',
+                title: { type: #STANDARD, value: 'ServiceOrder' },
+                description: { type: #STANDARD, value: 'Description' } },
+  presentationVariant: [{ sortOrder: [{ by: 'LastChangedAt', direction: #DESC }] }]
+}
+annotate entity ZCPRX_C_Order with
+{
+  @UI.facet: [
+    { id: 'General',  purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE, label: 'Allgemein', position: 10 },
+    { id: 'Sync',     purpose: #STANDARD, type: #FIELDGROUP_REFERENCE, targetQualifier: 'Sync', label: 'Status & Synchronisation', position: 20 },
+    { id: 'Times',    purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Time', label: 'Zeiten', position: 30 },
+    { id: 'Material', purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Material', label: 'Materialien', position: 40 },
+    { id: 'Admin',    purpose: #STANDARD, type: #FIELDGROUP_REFERENCE, targetQualifier: 'Admin', label: 'Verwaltung', position: 50 } ]
+
+  @UI.hidden: true
+  OrderUUID;
+
+  @UI: { lineItem:       [{ position: 10, importance: #HIGH },
+                          { type: #FOR_ACTION, dataAction: 'sendToPraxedo',    label: 'An Praxedo senden' },
+                          { type: #FOR_ACTION, dataAction: 'fetchFromPraxedo', label: 'Von Praxedo holen' },
+                          { type: #FOR_ACTION, dataAction: 'post',             label: 'Verbuchen' },
+                          { type: #FOR_ACTION, dataAction: 'resetError',       label: 'Fehler zurücksetzen' },
+                          { type: #FOR_ACTION, dataAction: 'cancel',           label: 'Stornieren' }],
+         identification: [{ position: 10 },
+                          { type: #FOR_ACTION, dataAction: 'sendToPraxedo',    label: 'An Praxedo senden' },
+                          { type: #FOR_ACTION, dataAction: 'fetchFromPraxedo', label: 'Von Praxedo holen' },
+                          { type: #FOR_ACTION, dataAction: 'post',             label: 'Verbuchen' },
+                          { type: #FOR_ACTION, dataAction: 'resetError',       label: 'Fehler zurücksetzen' },
+                          { type: #FOR_ACTION, dataAction: 'cancel',           label: 'Stornieren' }],
+         selectionField: [{ position: 10 }] }
+  @EndUserText.label: 'Serviceauftrag'
+  ServiceOrder;
+
+  @UI: { lineItem: [{ position: 20 }], identification: [{ position: 20 }] }
+  @EndUserText.label: 'Position'
+  ServiceOrderItem;
+
+  @UI: { lineItem: [{ position: 30, importance: #HIGH }], identification: [{ position: 30 }] }
+  @EndUserText.label: 'Beschreibung'
+  Description;
+
+  @ObjectModel.text.element: [ 'SoldToPartyName' ]
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'I_Customer_VH', element: 'Customer' } }]
+  @UI: { lineItem: [{ position: 40 }], identification: [{ position: 40 }], selectionField: [{ position: 30 }] }
+  @EndUserText.label: 'Auftraggeber'
+  SoldToParty;
+
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'I_Customer_VH', element: 'Customer' } }]
+  @UI: { identification: [{ position: 50 }] }
+  @EndUserText.label: 'Warenempfänger / Location'
+  ShipToParty;
+
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'I_EquipmentStdVH', element: 'Equipment' } }]
+  @UI: { lineItem: [{ position: 50 }], identification: [{ position: 60 }] }
+  @EndUserText.label: 'Equipment'
+  Equipment;
+
+  @UI: { lineItem: [{ position: 60 }], identification: [{ position: 70 }], selectionField: [{ position: 40 }] }
+  @EndUserText.label: 'Techniker'
+  Technician;
+
+  @UI: { lineItem: [{ position: 70 }], identification: [{ position: 80 }] }
+  @EndUserText.label: 'Geplanter Beginn'
+  PlannedStart;
+
+  @UI: { identification: [{ position: 90 }] }
+  @EndUserText.label: 'Geplantes Ende'
+  PlannedEnd;
+
+  @ObjectModel.text.element: [ 'StatusText' ]
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZCPRX_I_OrderStatusVH', element: 'Status' } }]
+  @UI: { lineItem: [{ position: 80, importance: #HIGH, criticality: 'StatusCriticality' }],
+         fieldGroup: [{ qualifier: 'Sync', position: 10, criticality: 'StatusCriticality' }],
+         selectionField: [{ position: 20 }] }
+  @EndUserText.label: 'Status'
+  Status;
+
+  @UI: { lineItem: [{ position: 90 }], fieldGroup: [{ qualifier: 'Sync', position: 20 }] }
+  @EndUserText.label: 'Praxedo-ID'
+  PraxedoId;
+
+  @UI: { fieldGroup: [{ qualifier: 'Sync', position: 30 }] }
+  @EndUserText.label: 'Praxedo-Status'
+  PraxedoStatus;
+
+  @UI: { lineItem: [{ position: 100 }], fieldGroup: [{ qualifier: 'Sync', position: 40 }] }
+  @EndUserText.label: 'Servicebestätigung'
+  ServiceConfirmation;
+
+  @UI: { fieldGroup: [{ qualifier: 'Sync', position: 50 }] }
+  @EndUserText.label: 'Letzte Übertragung'
+  LastSyncAt;
+
+  @UI: { fieldGroup: [{ qualifier: 'Sync', position: 60 }] }
+  @EndUserText.label: 'Letzte Rückmeldung'
+  LastFetchAt;
+
+  @UI: { fieldGroup: [{ qualifier: 'Sync', position: 70 }] }
+  @EndUserText.label: 'Verbucht am'
+  PostedAt;
+
+  @UI: { lineItem: [{ position: 110 }], fieldGroup: [{ qualifier: 'Sync', position: 80 }] }
+  @EndUserText.label: 'Meldung'
+  MessageText;
+
+  @UI.hidden: true
+  SyncRequired;
+
+  @UI: { fieldGroup: [{ qualifier: 'Admin', position: 10 }] }
+  CreatedBy;
+  @UI: { fieldGroup: [{ qualifier: 'Admin', position: 20 }] }
+  CreatedAt;
+  @UI: { fieldGroup: [{ qualifier: 'Admin', position: 30 }] }
+  LastChangedBy;
+  @UI: { fieldGroup: [{ qualifier: 'Admin', position: 40 }] }
+  LastChangedAt;
+  @UI.hidden: true
+  LocalLastChangedAt;
+  @UI.hidden: true
+  StatusCriticality;
+}

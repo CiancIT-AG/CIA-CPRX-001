@@ -1,0 +1,145 @@
+managed with additional save implementation in class zcprx_bp_r_order unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZCPRX_R_Order alias Order
+persistent table zcprxord
+draft table zcprxordd
+etag master LocalLastChangedAt
+lock master total etag LastChangedAt
+authorization master ( global )
+{
+  field ( readonly, numbering : managed ) OrderUUID;
+  field ( readonly ) PraxedoId, Status, PraxedoStatus, ServiceConfirmation, SyncRequired,
+                     LastSyncAt, LastFetchAt, PostedAt, MessageText, StatusCriticality,
+                     CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, LocalLastChangedAt;
+  field ( mandatory ) ServiceOrder, ServiceOrderItem;
+
+  create;
+  update ( features : instance );
+  delete ( features : instance, precheck );
+
+  association _Time     { create ( features : instance ); with draft; }
+  association _Material { create ( features : instance ); with draft; }
+
+  // --- Admin-Actions (in der Projektion veröffentlicht) ---------------
+  action ( features : instance ) sendToPraxedo    result [1] $self;
+  action ( features : instance ) fetchFromPraxedo result [1] $self;
+  action ( features : instance ) post             result [1] $self;
+  action ( features : instance ) resetError       result [1] $self;
+  // Stornieren: Status CANCELLED + Löschen in Praxedo (Historie bleibt)
+  action ( features : instance ) cancel           result [1] $self;
+
+  // --- Technische Actions (NICHT in der Projektion; nur für Adapter- --
+  // --- Klassen per EML, setzen read-only Felder IN LOCAL MODE)       --
+  action setSyncResult    parameter ZCPRX_A_SyncResult    result [1] $self;
+  action setInboundData   parameter ZCPRX_A_InboundData   result [1] $self;
+  action setPostingResult parameter ZCPRX_A_PostingResult result [1] $self;
+
+  determination setInitialValues on modify { create; }
+  determination markForSync on save
+  { create; field ServiceOrder, ServiceOrderItem, Description, SoldToParty, ShipToParty,
+                  Equipment, Technician, PlannedStart, PlannedEnd; }
+
+  validation validateServiceOrder on save { create; field ServiceOrder, ServiceOrderItem; }
+  validation validatePeriod       on save { create; field PlannedStart, PlannedEnd; }
+
+  draft action ( features : instance ) Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validateServiceOrder;
+    validation validatePeriod;
+  }
+
+  mapping for zcprxord
+  {
+    OrderUUID           = order_uuid;
+    PraxedoId           = praxedo_id;
+    ServiceOrder        = service_order;
+    ServiceOrderItem    = service_order_item;
+    Description         = description;
+    SoldToParty         = sold_to_party;
+    ShipToParty         = ship_to_party;
+    Equipment           = equipment;
+    Technician          = technician;
+    PlannedStart        = planned_start;
+    PlannedEnd          = planned_end;
+    Status              = status;
+    PraxedoStatus       = praxedo_status;
+    ServiceConfirmation = service_confirmation;
+    SyncRequired        = sync_required;
+    LastSyncAt          = last_sync_at;
+    LastFetchAt         = last_fetch_at;
+    PostedAt            = posted_at;
+    MessageText         = message_text;
+    CreatedBy           = created_by;
+    CreatedAt           = created_at;
+    LastChangedBy       = last_changed_by;
+    LastChangedAt       = last_changed_at;
+    LocalLastChangedAt  = local_last_changed_at;
+  }
+}
+
+define behavior for ZCPRX_R_OrderTime alias OrderTime
+persistent table zcprxtim
+draft table zcprxtimd
+etag master LocalLastChangedAt
+lock dependent by _Order
+authorization dependent by _Order
+{
+  field ( readonly, numbering : managed ) TimeUUID;
+  field ( readonly ) OrderUUID, IsPosted, LocalLastChangedAt;
+
+  update ( features : instance );
+  delete ( features : instance );
+
+  association _Order { with draft; }
+
+  mapping for zcprxtim
+  {
+    TimeUUID           = time_uuid;
+    OrderUUID          = order_uuid;
+    PraxedoLineId      = praxedo_line_id;
+    Technician         = technician;
+    ServiceProduct     = service_product;
+    StartAt            = start_at;
+    EndAt              = end_at;
+    Duration           = duration;
+    DurationUnit       = duration_unit;
+    IsPosted           = is_posted;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}
+
+define behavior for ZCPRX_R_OrderMaterial alias OrderMaterial
+persistent table zcprxmat
+draft table zcprxmatd
+etag master LocalLastChangedAt
+lock dependent by _Order
+authorization dependent by _Order
+{
+  field ( readonly, numbering : managed ) MaterialUUID;
+  field ( readonly ) OrderUUID, IsPosted, LocalLastChangedAt;
+
+  update ( features : instance );
+  delete ( features : instance );
+
+  association _Order { with draft; }
+
+  mapping for zcprxmat
+  {
+    MaterialUUID       = material_uuid;
+    OrderUUID          = order_uuid;
+    PraxedoLineId      = praxedo_line_id;
+    Product            = product;
+    Quantity           = quantity;
+    QuantityUnit       = quantity_unit;
+    Plant              = plant;
+    StorageLocation    = storage_location;
+    IsPosted           = is_posted;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}

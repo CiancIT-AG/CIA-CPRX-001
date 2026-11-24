@@ -1,0 +1,8 @@
+projection;
+strict ( 2 );
+
+define behavior for ZCPRX_C_Product alias Product
+use etag
+{
+  use action sendToPraxedo;
+}

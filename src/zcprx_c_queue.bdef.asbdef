@@ -1,0 +1,9 @@
+projection;
+strict ( 2 );
+
+define behavior for ZCPRX_C_Queue alias Queue
+use etag
+{
+  use delete;
+  use action retry;
+}

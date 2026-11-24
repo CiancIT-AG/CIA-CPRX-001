@@ -1,0 +1,35 @@
+@Metadata.layer: #CUSTOMER
+@UI.headerInfo: { typeName: 'Equipmenttyp', typeNamePlural: 'Equipmenttypen', title: { value: 'EquipmentType' }, description: { value: 'EquipmentTypeName' } }
+annotate entity ZCPRX_C_EquipmentType with
+{
+  @UI.facet: [{ id: 'EQT', purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE, label: 'Equipmenttyp', position: 10 }]
+  @ObjectModel.text.element: [ 'EquipmentTypeName' ]
+  @UI: { lineItem: [{ position: 10 },
+                    { type: #FOR_ACTION, dataAction: 'loadFromSap',   label: 'Aus SAP übernehmen' },
+                    { type: #FOR_ACTION, dataAction: 'sendToPraxedo', label: 'An Praxedo senden' },
+                    { type: #FOR_ACTION, dataAction: 'activate',      label: 'Aktivieren' },
+                    { type: #FOR_ACTION, dataAction: 'deactivate',    label: 'Deaktivieren' }],
+         identification: [{ position: 10 }],
+         selectionField: [{ position: 10 }] }
+  @EndUserText.label: 'Equipmenttyp'
+  EquipmentType;
+  @UI: { lineItem: [{ position: 20 }], identification: [{ position: 20 }] }
+  @EndUserText.label: 'Aktiv'
+  IsActive;
+  @ObjectModel.text.element: [ 'StatusText' ]
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZCPRX_I_SyncStatusVH', element: 'Status' } }]
+  @UI: { lineItem: [{ position: 30 }], identification: [{ position: 30 }], selectionField: [{ position: 20 }] }
+  @EndUserText.label: 'Status'
+  Status;
+  @UI: { lineItem: [{ position: 40 }], identification: [{ position: 40 }] }
+  @EndUserText.label: 'Praxedo-ID'
+  PraxedoId;
+  @UI: { lineItem: [{ position: 50 }], identification: [{ position: 50 }] }
+  @EndUserText.label: 'Zuletzt gesendet'
+  LastSentAt;
+  @UI: { lineItem: [{ position: 60 }], identification: [{ position: 60 }] }
+  @EndUserText.label: 'Meldung'
+  MessageText;
+  @UI.hidden: true
+  LocalLastChangedAt;
+}

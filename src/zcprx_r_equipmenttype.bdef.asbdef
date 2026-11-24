@@ -1,0 +1,46 @@
+managed with additional save implementation in class zcprx_bp_r_equipmenttype unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZCPRX_R_EquipmentType alias EquipmentType
+persistent table zcprxeqt
+draft table zcprxeqtd
+lock master total etag LastChangedAt
+authorization master ( global )
+etag master LocalLastChangedAt
+{
+  field ( readonly : update, mandatory : create ) EquipmentType;
+  field ( readonly ) PraxedoId, Status, LastSentAt, MessageText,
+                     CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, LocalLastChangedAt;
+
+  create;          // Admin-App (Draft) und Job/EML
+  update;
+  delete;
+
+  static action loadFromSap;
+  action ( features : instance ) sendToPraxedo result [1] $self;
+  action ( features : instance ) activate      result [1] $self;
+  action ( features : instance ) deactivate    result [1] $self;
+  action setSyncResult parameter ZCPRX_A_SyncResult result [1] $self;
+
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+
+  mapping for zcprxeqt
+  {
+    EquipmentType      = equipment_type;
+    IsActive           = is_active;
+    PraxedoId          = praxedo_id;
+    Status             = status;
+    LastSentAt         = last_sent_at;
+    MessageText        = message_text;
+    CreatedBy          = created_by;
+    CreatedAt          = created_at;
+    LastChangedBy      = last_changed_by;
+    LastChangedAt      = last_changed_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}

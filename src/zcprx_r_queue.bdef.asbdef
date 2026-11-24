@@ -1,0 +1,32 @@
+managed with additional save implementation in class zcprx_bp_r_queue unique;
+strict ( 2 );
+
+define behavior for ZCPRX_R_Queue alias Queue
+persistent table zcprxque
+lock master
+authorization master ( global )
+etag master LocalLastChangedAt
+{
+  field ( readonly ) QueueUUID, ObjectType, ObjectKey, Operation, Status, RetryCount,
+                     MessageText, CreatedAt, StartedAt, NextRetryAt, ProcessedAt,
+                     StatusCriticality, LastChangedAt, LocalLastChangedAt;
+  delete;
+  action ( features : instance ) retry result [1] $self;
+
+  mapping for zcprxque
+  {
+    QueueUUID          = queue_uuid;
+    ObjectType         = object_type;
+    ObjectKey          = object_key;
+    Operation          = operation;
+    Status             = status;
+    RetryCount         = retry_count;
+    MessageText        = message_text;
+    CreatedAt          = created_at;
+    StartedAt          = started_at;
+    NextRetryAt        = next_retry_at;
+    ProcessedAt        = processed_at;
+    LastChangedAt      = last_changed_at;
+    LocalLastChangedAt = local_last_changed_at;
+  }
+}
