@@ -59,15 +59,22 @@ CLASS zcprx_cl_log IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD exception.
-    mv_errors += 1.
-    APPEND ix_error->get_text( ) TO mt_errors.
-    CHECK mo_log IS BOUND.
-    TRY.
-        mo_log->add_item( item = cl_bali_exception_setter=>create(
-                                   severity  = if_bali_constants=>c_severity_error
-                                   exception = ix_error ) ).
-      CATCH cx_bali_runtime ##NO_HANDLER.
-    ENDTRY.
+    " Als Freitext protokollieren: Der Exception-Setter zeigt bei Ausnahmen
+    " ohne T100-Nachricht nur "An exception was raised."
+    DATA(lv_text) = ix_error->get_text( ).
+    IF lv_text IS INITIAL.
+      lv_text = cl_abap_typedescr=>describe_by_object_ref( ix_error )->get_relative_name( ).
+    ENDIF.
+    " Vorgänger anhängen, sofern nicht schon im Text enthalten (bei ZCPRX_CX_ERROR schon drin)
+    DATA(lx_previous) = ix_error->previous.
+    WHILE lx_previous IS BOUND.
+      DATA(lv_previous) = lx_previous->get_text( ).
+      IF lv_previous IS NOT INITIAL AND lv_text NS lv_previous.
+        lv_text = |{ lv_text } / { lv_previous }|.
+      ENDIF.
+      lx_previous = lx_previous->previous.
+    ENDWHILE.
+    error( lv_text ).
   ENDMETHOD.
 
   METHOD get_errors.
@@ -89,15 +96,22 @@ CLASS zcprx_cl_log IMPLEMENTATION.
 
   METHOD add_text.
     CHECK mo_log IS BOUND.
-    DATA(lv_text) = CONV string( iv_text ).
-    IF strlen( lv_text ) > 200.          " Freitext max. 200 Zeichen
-      lv_text = lv_text(200).
-    ENDIF.
-    TRY.
-        mo_log->add_item( item = cl_bali_free_text_setter=>create( severity = CONV #( iv_severity )
-                                                                   text     = CONV #( lv_text ) ) ).
-      CATCH cx_bali_runtime ##NO_HANDLER.
-    ENDTRY.
+    " Zeilenumbrüche entfernen; Freitext max. 200 Zeichen -> lange Texte auf Folgezeilen
+    DATA(lv_text) = condense( replace( val = CONV string( iv_text ) pcre = `[\r\n\t]+` with = ` ` occ = 0 ) ).
+    DATA(lv_first) = abap_true.
+    WHILE lv_text IS NOT INITIAL.
+      DATA(lv_len)  = nmin( val1 = strlen( lv_text ) val2 = COND i( WHEN lv_first = abap_true THEN 200 ELSE 198 ) ).
+      DATA(lv_part) = COND string( WHEN lv_first = abap_true THEN substring( val = lv_text len = lv_len )
+                                   ELSE |… { substring( val = lv_text len = lv_len ) }| ).
+      lv_text  = substring( val = lv_text off = lv_len ).
+      lv_first = abap_false.
+      TRY.
+          mo_log->add_item( item = cl_bali_free_text_setter=>create( severity = CONV #( iv_severity )
+                                                                     text     = CONV #( lv_part ) ) ).
+        CATCH cx_bali_runtime ##NO_HANDLER.
+      ENDTRY.
+    ENDWHILE.
   ENDMETHOD.
 
 ENDCLASS.
+

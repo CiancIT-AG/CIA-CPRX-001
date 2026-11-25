@@ -66,4 +66,19 @@ INTERFACE zcprx_if_srvord_api PUBLIC.
     RETURNING VALUE(rv_confirmation) TYPE char10
     RAISING   zcprx_cx_error.
 
+  "! Anlage mit diesem Dateinamen am Serviceauftrag vorhanden?
+  METHODS has_attachment
+    IMPORTING iv_service_order TYPE char10
+              iv_file_name     TYPE string
+    RETURNING VALUE(rv_exists) TYPE abap_bool
+    RAISING   zcprx_cx_error.
+
+  "! Datei als Anlage an den Serviceauftrag hängen
+  METHODS add_attachment
+    IMPORTING iv_service_order TYPE char10
+              iv_file_name     TYPE string
+              iv_mime_type     TYPE string
+              iv_content       TYPE xstring
+    RAISING   zcprx_cx_error.
+
 ENDINTERFACE.

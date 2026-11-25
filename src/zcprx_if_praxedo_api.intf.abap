@@ -32,7 +32,7 @@ INTERFACE zcprx_if_praxedo_api PUBLIC.
     END OF ty_equipment,
 
     BEGIN OF ty_order,
-      id                 TYPE string,
+      id                 TYPE string,   " Praxedo-Code (leer = external_id)
       external_id        TYPE string,
       service_order      TYPE string,
       service_order_item TYPE string,
@@ -67,7 +67,8 @@ INTERFACE zcprx_if_praxedo_api PUBLIC.
     tt_material TYPE STANDARD TABLE OF ty_material WITH EMPTY KEY,
 
     BEGIN OF ty_completed_order,
-      id                 TYPE string,
+      id                 TYPE string,   " Praxedo-Code des Einsatzes
+      uuid               TYPE string,   " Praxedo-UUID (für den Bericht)
       external_id        TYPE string,
       service_order      TYPE string,
       service_order_item TYPE string,
@@ -98,14 +99,7 @@ INTERFACE zcprx_if_praxedo_api PUBLIC.
       id          TYPE string,
       error       TYPE string,
     END OF ty_id_result,
-    tt_id_result TYPE STANDARD TABLE OF ty_id_result WITH EMPTY KEY,
-
-    BEGIN OF ty_report_line,
-      timestamp TYPE string,
-      level     TYPE string,      " INFO | WARNING | ERROR
-      text      TYPE string,
-    END OF ty_report_line,
-    tt_report_line TYPE STANDARD TABLE OF ty_report_line WITH EMPTY KEY.
+    tt_id_result TYPE STANDARD TABLE OF ty_id_result WITH EMPTY KEY.
 
   METHODS upsert_customer
     IMPORTING is_customer  TYPE ty_customer
@@ -122,21 +116,24 @@ INTERFACE zcprx_if_praxedo_api PUBLIC.
     RETURNING VALUE(rv_id) TYPE string
     RAISING   zcprx_cx_error.
 
+  "! Einsatz anlegen bzw. ändern (BusinessEventManager), mit Techniker einplanen
   METHODS upsert_order
     IMPORTING is_order     TYPE ty_order
     RETURNING VALUE(rv_id) TYPE string
     RAISING   zcprx_cx_error.
 
+  "! Einsatz stornieren (cancelEvent) bzw. löschen (Konfig PRX_CANCEL_MODE)
   METHODS delete_order
     IMPORTING iv_id TYPE string
     RAISING   zcprx_cx_error.
 
+  "! Einsatz inkl. Zeiten (ActivityManager) und Material lesen
   METHODS get_order
     IMPORTING iv_id           TYPE string
     RETURNING VALUE(rs_order) TYPE ty_completed_order
     RAISING   zcprx_cx_error.
 
-  "! Abgeschlossene Aufträge inkl. Zeiten & Materialien seit Zeitpunkt
+  "! Abgeschlossene/validierte Einsätze inkl. Zeiten & Materialien seit Zeitpunkt
   METHODS get_completed_orders
     IMPORTING iv_since         TYPE string
     RETURNING VALUE(rt_orders) TYPE tt_completed_order
@@ -157,15 +154,15 @@ INTERFACE zcprx_if_praxedo_api PUBLIC.
     RETURNING VALUE(rt_result) TYPE tt_id_result
     RAISING   zcprx_cx_error.
 
-  "! Installationsprüfung: Kommunikationsarrangement vorhanden und
-  "! (falls PATH_PING gepflegt) Praxedo erreichbar
+  "! Installationsprüfung: SOAP-Aufruf + REST-v1-Arrangement
   METHODS ping
     RAISING zcprx_cx_error.
 
-  METHODS get_report
-    IMPORTING iv_report_id    TYPE string
-              iv_date         TYPE d
-    RETURNING VALUE(rt_lines) TYPE tt_report_line
+  "! Einsatzbericht als PDF (REST v1 render, ohne Anmeldung)
+  METHODS get_report_pdf
+    IMPORTING iv_uuid       TYPE string
+              iv_code       TYPE string
+    RETURNING VALUE(rv_pdf) TYPE xstring
     RAISING   zcprx_cx_error.
 
 ENDINTERFACE.

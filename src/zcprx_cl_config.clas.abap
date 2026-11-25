@@ -4,16 +4,26 @@ CLASS zcprx_cl_config DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     CONSTANTS:
       BEGIN OF c_param,
-        " Praxedo-Endpunkte (relativ zur URL im Kommunikationssystem)
-        path_customer        TYPE c LENGTH 30 VALUE 'PATH_CUSTOMER',
-        path_location        TYPE c LENGTH 30 VALUE 'PATH_LOCATION',
-        path_equipment       TYPE c LENGTH 30 VALUE 'PATH_EQUIPMENT',
-        path_order           TYPE c LENGTH 30 VALUE 'PATH_ORDER',
-        path_order_search    TYPE c LENGTH 30 VALUE 'PATH_ORDER_SEARCH',
-        path_product         TYPE c LENGTH 30 VALUE 'PATH_PRODUCT',
-        path_product_group   TYPE c LENGTH 30 VALUE 'PATH_PRODGROUP',
-        path_equipment_type  TYPE c LENGTH 30 VALUE 'PATH_EQTYPE',
-        path_report          TYPE c LENGTH 30 VALUE 'PATH_REPORT',
+        " Praxedo SOAP v6 / REST v1 (Pfade relativ zum Host im Kommunikationssystem)
+        prx_soap_path        TYPE c LENGTH 30 VALUE 'PRX_SOAP_PATH',
+        prx_rest_path        TYPE c LENGTH 30 VALUE 'PRX_REST_PATH',
+        prx_event_type       TYPE c LENGTH 30 VALUE 'PRX_EVENT_TYPE',
+        prx_event_duration   TYPE c LENGTH 30 VALUE 'PRX_EVENT_DURATION',
+        prx_agent_id_type    TYPE c LENGTH 30 VALUE 'PRX_AGENT_ID_TYPE',
+        prx_populate         TYPE c LENGTH 30 VALUE 'PRX_POPULATE',
+        prx_search_dates     TYPE c LENGTH 30 VALUE 'PRX_SEARCH_DATES',
+        prx_batch_size       TYPE c LENGTH 30 VALUE 'PRX_BATCH_SIZE',
+        prx_uuid_key         TYPE c LENGTH 30 VALUE 'PRX_UUID_KEY',
+        prx_cancel_mode      TYPE c LENGTH 30 VALUE 'PRX_CANCEL_MODE',
+        activity_types       TYPE c LENGTH 30 VALUE 'ACTIVITY_TYPES',
+        activity_products    TYPE c LENGTH 30 VALUE 'ACTIVITY_PRODUCTS',
+        activity_validated   TYPE c LENGTH 30 VALUE 'ACTIVITY_VALIDATED',
+        default_item_cat     TYPE c LENGTH 30 VALUE 'DEFAULT_ITEM_CAT',
+        " Bericht (PDF) -> Anlage am Serviceauftrag
+        report_statuses      TYPE c LENGTH 30 VALUE 'REPORT_STATUSES',
+        report_path          TYPE c LENGTH 30 VALUE 'REPORT_PATH',
+        attach_api_path      TYPE c LENGTH 30 VALUE 'ATTACH_API_PATH',
+        attach_object_type   TYPE c LENGTH 30 VALUE 'ATTACH_OBJECT_TYPE',
         " SAP-Loopback-APIs (Service Order / Service Confirmation)
         so_api_path          TYPE c LENGTH 30 VALUE 'SO_API_PATH',
         so_changed_field     TYPE c LENGTH 30 VALUE 'SO_CHANGED_FIELD',
@@ -33,8 +43,6 @@ CLASS zcprx_cl_config DEFINITION PUBLIC FINAL CREATE PUBLIC.
         last_delta_ts        TYPE c LENGTH 30 VALUE 'LAST_DELTA_TS',
         max_retries          TYPE c LENGTH 30 VALUE 'MAX_RETRIES',
         package_size         TYPE c LENGTH 30 VALUE 'PACKAGE_SIZE',
-        report_id            TYPE c LENGTH 30 VALUE 'REPORT_ID',
-        path_ping            TYPE c LENGTH 30 VALUE 'PATH_PING',
         " Mail-Alerting
         alert_active         TYPE c LENGTH 30 VALUE 'ALERT_ACTIVE',
         alert_recipients     TYPE c LENGTH 30 VALUE 'ALERT_RECIPIENTS',
@@ -84,6 +92,10 @@ CLASS zcprx_cl_config DEFINITION PUBLIC FINAL CREATE PUBLIC.
     "! Puffer verwerfen (z. B. nach Pflege in der App während eines langen Laufs)
     CLASS-METHODS refresh.
 
+    "! Nicht mehr verwendete Parameter (REST-Pfade vor SOAP-Umstellung) löschen
+    CLASS-METHODS delete_obsolete
+      RETURNING VALUE(rv_deleted) TYPE i.
+
     "! Ganzzahliger Parameter; ungültig/leer -> Standardwert, mind. iv_min
     CLASS-METHODS get_int
       IMPORTING iv_param        TYPE csequence
@@ -129,20 +141,28 @@ CLASS zcprx_cl_config IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_defaults.
-    " Praxedo-Pfade: an die vom On-Prem-Adapter genutzte Praxedo-API anpassen
     rt_defaults = VALUE #(
-      ( param = c_param-path_customer       value = `/customers` )
-      ( param = c_param-path_location       value = `/locations` )
-      ( param = c_param-path_equipment      value = `/equipments` )
-      ( param = c_param-path_order          value = `/interventions` )
-      ( param = c_param-path_order_search   value = `/interventions/completed` )
-      ( param = c_param-path_product        value = `/items/bulk` )
-      ( param = c_param-path_product_group  value = `/item-groups/bulk` )
-      ( param = c_param-path_equipment_type value = `/equipment-types/bulk` )
-      ( param = c_param-path_report         value = `/reports` )
-      ( param = c_param-path_ping           value = `` )
+      " Praxedo SOAP v6 (Manager-Name wird angehängt) und REST v1
+      ( param = c_param-prx_soap_path       value = `/eTech/services/cxf/v6` )
+      ( param = c_param-prx_rest_path       value = `/eTech/rest/api/v1` )
+      ( param = c_param-prx_event_type      value = `` )                  " Pflicht: Praxedo-Einsatztyp
+      ( param = c_param-prx_event_duration  value = `60` )                " Minuten ohne Planzeitraum
+      ( param = c_param-prx_agent_id_type   value = `praxedoEntityId` )   " oder externalEntityId
+      ( param = c_param-prx_populate        value = `coreData,qualificationData,completionData.items,completionData.lifecycleTransitionDate` )
+      ( param = c_param-prx_search_dates    value = `completionDate,validationDate` )
+      ( param = c_param-prx_batch_size      value = `50` )
+      ( param = c_param-prx_uuid_key        value = `uuid` )
+      ( param = c_param-prx_cancel_mode     value = `CANCEL` )            " CANCEL | DELETE
+      ( param = c_param-activity_types      value = `` )                  " leer = alle Aktivitätstypen
+      ( param = c_param-activity_products   value = `` )                  " TYP=PRODUKT,…
+      ( param = c_param-activity_validated  value = `` )                  " leer | true | false
+      ( param = c_param-default_item_cat    value = `` )
+      ( param = c_param-report_statuses     value = `VALIDATED` )
+      ( param = c_param-report_path         value = `/workOrder/uuid:{UUID}/render` )
+      ( param = c_param-attach_api_path     value = `/sap/opu/odata/sap/API_CV_ATTACHMENT_SRV` )
+      ( param = c_param-attach_object_type  value = `BUS2000116` )
       ( param = c_param-so_api_path         value = `/sap/opu/odata/sap/API_SERVICE_ORDER_SRV` )
-      ( param = c_param-so_changed_field    value = `LastChangeDateTime` )
+      ( param = c_param-so_changed_field    value = `ServiceDocChangedDateTime` )
       ( param = c_param-conf_api_path       value = `/sap/opu/odata/sap/API_SERVICE_CONFIRMATION_SRV` )
       ( param = c_param-conf_type           value = `SVC1` )
       ( param = c_param-conf_itemcat_time   value = `` )
@@ -155,7 +175,6 @@ CLASS zcprx_cl_config IMPLEMENTATION.
       ( param = c_param-completed_statuses  value = `COMPLETED,VALIDATED` )
       ( param = c_param-max_retries         value = `5` )
       ( param = c_param-package_size        value = `500` )
-      ( param = c_param-report_id           value = `DAILY` )
       ( param = c_param-alert_active        value = `X` )
       ( param = c_param-alert_recipients    value = `` )
       ( param = c_param-alert_sender        value = `` )
@@ -209,6 +228,16 @@ CLASS zcprx_cl_config IMPLEMENTATION.
     refresh( ).
   ENDMETHOD.
 
+  METHOD delete_obsolete.
+    DELETE FROM zcprxcfg WHERE param LIKE 'PATH\_%' ESCAPE '\' OR param = 'REPORT_ID'.
+    rv_deleted = sy-dbcnt.
+    " Alter Standardwert existiert in A_ServiceOrder nicht
+    UPDATE zcprxcfg SET value = 'ServiceDocChangedDateTime'
+      WHERE param = 'SO_CHANGED_FIELD' AND value = 'LastChangeDateTime'.
+    rv_deleted = rv_deleted + sy-dbcnt.
+    refresh( ).
+  ENDMETHOD.
+
   METHOD get_list.
     DATA(lv_value) = get( iv_param ).
     CHECK lv_value IS NOT INITIAL.
@@ -233,3 +262,4 @@ CLASS zcprx_cl_config IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+

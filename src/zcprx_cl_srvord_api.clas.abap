@@ -66,7 +66,16 @@ CLASS zcprx_cl_srvord_api DEFINITION PUBLIC FINAL CREATE PUBLIC.
       END OF ty_v2_conf,
       BEGIN OF ty_v2_conf_resp,
         d TYPE ty_v2_conf,
-      END OF ty_v2_conf_resp.
+      END OF ty_v2_conf_resp,
+      BEGIN OF ty_v2_attachment,
+        filename TYPE string,
+      END OF ty_v2_attachment,
+      BEGIN OF ty_v2_attachment_list,
+        results TYPE STANDARD TABLE OF ty_v2_attachment WITH EMPTY KEY,
+      END OF ty_v2_attachment_list,
+      BEGIN OF ty_v2_attachment_resp,
+        d TYPE ty_v2_attachment_list,
+      END OF ty_v2_attachment_resp.
 
     METHODS get_client
       RETURNING VALUE(ro_client) TYPE REF TO if_web_http_client
@@ -192,6 +201,60 @@ CLASS zcprx_cl_srvord_api IMPLEMENTATION.
     rv_confirmation = ls_resp-d-serviceconfirmation.
   ENDMETHOD.
 
+  METHOD zcprx_if_srvord_api~has_attachment.
+    DATA ls_resp TYPE ty_v2_attachment_resp.
+    DATA(lv_base) = zcprx_cl_config=>get( zcprx_cl_config=>c_param-attach_api_path ).
+    DATA(lv_type) = zcprx_cl_config=>get( zcprx_cl_config=>c_param-attach_object_type ).
+
+    DATA(lv_json) = get( |{ lv_base }/GetAllOriginals?BusinessObjectTypeName='{ lv_type }'| &&
+                         |&LinkedSAPObjectKey='{ iv_service_order }'&$format=json| ).
+    /ui2/cl_json=>deserialize( EXPORTING json = lv_json CHANGING data = ls_resp ).
+    rv_exists = xsdbool( line_exists( ls_resp-d-results[ filename = iv_file_name ] ) ).
+  ENDMETHOD.
+
+  METHOD zcprx_if_srvord_api~add_attachment.
+    DATA(lv_base)   = zcprx_cl_config=>get( zcprx_cl_config=>c_param-attach_api_path ).
+    DATA(lv_type)   = zcprx_cl_config=>get( zcprx_cl_config=>c_param-attach_object_type ).
+    DATA(lo_client) = get_client( ).
+
+    TRY.
+        " 1) CSRF-Token holen
+        DATA(lo_request) = lo_client->get_http_request( ).
+        lo_request->set_uri_path( i_uri_path = |{ lv_base }/| ).
+        lo_request->set_header_field( i_name = 'x-csrf-token' i_value = 'fetch' ).
+        DATA(lo_response) = lo_client->execute( if_web_http_client=>get ).
+        DATA(lv_token)    = lo_response->get_header_field( 'x-csrf-token' ).
+        DATA(lt_cookies)  = lo_response->get_cookies( ).
+
+        " 2) Upload: Slug = Dateiname, Objekt über Header
+        lo_request->set_uri_path( i_uri_path = |{ lv_base }/AttachmentContentSet| ).
+        lo_request->set_header_field( i_name = 'x-csrf-token'           i_value = lv_token ).
+        lo_request->set_header_field( i_name = 'Slug'                   i_value = escape( val = iv_file_name format = cl_abap_format=>e_url_full ) ).
+        lo_request->set_header_field( i_name = 'BusinessObjectTypeName' i_value = lv_type ).
+        lo_request->set_header_field( i_name = 'LinkedSAPObjectKey'     i_value = CONV #( iv_service_order ) ).
+        lo_request->set_header_field( i_name = 'Content-Type'           i_value = iv_mime_type ).
+        lo_request->set_header_field( i_name = 'Accept'                 i_value = 'application/json' ).
+        LOOP AT lt_cookies INTO DATA(ls_cookie).
+          lo_request->set_cookie( i_name = ls_cookie-name i_value = ls_cookie-value ).
+        ENDLOOP.
+        lo_request->set_binary( iv_content ).
+
+        lo_response = lo_client->execute( if_web_http_client=>post ).
+        DATA(ls_status) = lo_response->get_status( ).
+        DATA(lv_text)   = lo_response->get_text( ).
+        lo_client->close( ).
+
+        IF ls_status-code <> 201 AND ls_status-code <> 200.
+          zcprx_cx_error=>raise(
+            iv_text      = |Anlage { iv_file_name }: HTTP { ls_status-code } { substring( val = lv_text len = nmin( val1 = strlen( lv_text ) val2 = 160 ) ) }|
+            iv_permanent = zcprx_cx_error=>is_permanent_http( ls_status-code ) ).
+        ENDIF.
+
+      CATCH cx_web_http_client_error cx_web_message_error INTO DATA(lx_http).
+        zcprx_cx_error=>raise( iv_text = |Anlage { iv_file_name }: HTTP-Fehler| ix_previous = lx_http ).
+    ENDTRY.
+  ENDMETHOD.
+
   METHOD zcprx_if_srvord_api~ping.
     get( |{ zcprx_cl_config=>get( zcprx_cl_config=>c_param-so_api_path ) }/A_ServiceOrder?$top=1&$select=ServiceOrder&$format=json| ).
     get( |{ zcprx_cl_config=>get( zcprx_cl_config=>c_param-conf_api_path ) }/A_ServiceConfirmation?$top=1&$select=ServiceConfirmation&$format=json| ).
@@ -288,3 +351,4 @@ CLASS zcprx_cl_srvord_api IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+

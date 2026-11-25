@@ -14,6 +14,7 @@ use etag
   use action post;
   use action resetError;
   use action cancel;
+  use action attachReport;
 
   use action Edit;
   use action Activate;

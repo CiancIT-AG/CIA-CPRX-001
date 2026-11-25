@@ -22,6 +22,10 @@ define root view entity ZCPRX_R_Order
       planned_end           as PlannedEnd,
       status                as Status,
       praxedo_status        as PraxedoStatus,
+      praxedo_uuid          as PraxedoUUID,
+      report_status         as ReportStatus,
+      report_attached_at    as ReportAttachedAt,
+      report_message        as ReportMessage,
       service_confirmation  as ServiceConfirmation,
       sync_required         as SyncRequired,
       last_sync_at          as LastSyncAt,
@@ -37,6 +41,12 @@ define root view entity ZCPRX_R_Order
               when 'SENT'       then 3
               else 0
             end as abap.int1 )  as StatusCriticality,
+      cast( case report_status
+              when 'ERROR'    then 1
+              when 'OPEN'     then 2
+              when 'ATTACHED' then 3
+              else 0
+            end as abap.int1 )  as ReportCriticality,
       @Semantics.user.createdBy: true
       created_by            as CreatedBy,
       @Semantics.systemDateTime.createdAt: true

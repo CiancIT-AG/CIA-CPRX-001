@@ -12,6 +12,7 @@ authorization master ( global )
   field ( readonly, numbering : managed ) OrderUUID;
   field ( readonly ) PraxedoId, Status, PraxedoStatus, ServiceConfirmation, SyncRequired,
                      LastSyncAt, LastFetchAt, PostedAt, MessageText, StatusCriticality,
+                     PraxedoUUID, ReportStatus, ReportAttachedAt, ReportMessage, ReportCriticality,
                      CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, LocalLastChangedAt;
   field ( mandatory ) ServiceOrder, ServiceOrderItem;
 
@@ -29,12 +30,15 @@ authorization master ( global )
   action ( features : instance ) resetError       result [1] $self;
   // Stornieren: Status CANCELLED + Löschen in Praxedo (Historie bleibt)
   action ( features : instance ) cancel           result [1] $self;
+  // Praxedo-Bericht (PDF) an den Serviceauftrag hängen (Queue ORDER/REPORT)
+  action ( features : instance ) attachReport     result [1] $self;
 
   // --- Technische Actions (NICHT in der Projektion; nur für Adapter- --
   // --- Klassen per EML, setzen read-only Felder IN LOCAL MODE)       --
   action setSyncResult    parameter ZCPRX_A_SyncResult    result [1] $self;
   action setInboundData   parameter ZCPRX_A_InboundData   result [1] $self;
   action setPostingResult parameter ZCPRX_A_PostingResult result [1] $self;
+  action setReportResult  parameter ZCPRX_A_ReportResult  result [1] $self;
 
   determination setInitialValues on modify { create; }
   determination markForSync on save
@@ -69,6 +73,10 @@ authorization master ( global )
     PlannedEnd          = planned_end;
     Status              = status;
     PraxedoStatus       = praxedo_status;
+    PraxedoUUID         = praxedo_uuid;
+    ReportStatus        = report_status;
+    ReportAttachedAt    = report_attached_at;
+    ReportMessage       = report_message;
     ServiceConfirmation = service_confirmation;
     SyncRequired        = sync_required;
     LastSyncAt          = last_sync_at;

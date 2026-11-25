@@ -10,6 +10,7 @@ annotate entity ZCPRX_C_Order with
   @UI.facet: [
     { id: 'General',  purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE, label: 'Allgemein', position: 10 },
     { id: 'Sync',     purpose: #STANDARD, type: #FIELDGROUP_REFERENCE, targetQualifier: 'Sync', label: 'Status & Synchronisation', position: 20 },
+    { id: 'Report',   purpose: #STANDARD, type: #FIELDGROUP_REFERENCE, targetQualifier: 'Report', label: 'Praxedo-Bericht', position: 25 },
     { id: 'Times',    purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Time', label: 'Zeiten', position: 30 },
     { id: 'Material', purpose: #STANDARD, type: #LINEITEM_REFERENCE, targetElement: '_Material', label: 'Materialien', position: 40 },
     { id: 'Admin',    purpose: #STANDARD, type: #FIELDGROUP_REFERENCE, targetQualifier: 'Admin', label: 'Verwaltung', position: 50 } ]
@@ -22,13 +23,15 @@ annotate entity ZCPRX_C_Order with
                           { type: #FOR_ACTION, dataAction: 'fetchFromPraxedo', label: 'Von Praxedo holen' },
                           { type: #FOR_ACTION, dataAction: 'post',             label: 'Verbuchen' },
                           { type: #FOR_ACTION, dataAction: 'resetError',       label: 'Fehler zurücksetzen' },
-                          { type: #FOR_ACTION, dataAction: 'cancel',           label: 'Stornieren' }],
+                          { type: #FOR_ACTION, dataAction: 'cancel',           label: 'Stornieren' },
+                          { type: #FOR_ACTION, dataAction: 'attachReport',     label: 'Bericht anhängen' }],
          identification: [{ position: 10 },
                           { type: #FOR_ACTION, dataAction: 'sendToPraxedo',    label: 'An Praxedo senden' },
                           { type: #FOR_ACTION, dataAction: 'fetchFromPraxedo', label: 'Von Praxedo holen' },
                           { type: #FOR_ACTION, dataAction: 'post',             label: 'Verbuchen' },
                           { type: #FOR_ACTION, dataAction: 'resetError',       label: 'Fehler zurücksetzen' },
-                          { type: #FOR_ACTION, dataAction: 'cancel',           label: 'Stornieren' }],
+                          { type: #FOR_ACTION, dataAction: 'cancel',           label: 'Stornieren' },
+                          { type: #FOR_ACTION, dataAction: 'attachReport',     label: 'Bericht anhängen' }],
          selectionField: [{ position: 10 }] }
   @EndUserText.label: 'Serviceauftrag'
   ServiceOrder;
@@ -79,9 +82,30 @@ annotate entity ZCPRX_C_Order with
   @EndUserText.label: 'Praxedo-ID'
   PraxedoId;
 
-  @UI: { fieldGroup: [{ qualifier: 'Sync', position: 30 }] }
+  @UI: { lineItem: [{ position: 95 }], fieldGroup: [{ qualifier: 'Sync', position: 30 }], selectionField: [{ position: 50 }] }
   @EndUserText.label: 'Praxedo-Status'
   PraxedoStatus;
+
+  @UI: { lineItem:   [{ position: 97, criticality: 'ReportCriticality', label: 'Bericht' }],
+         fieldGroup: [{ qualifier: 'Report', position: 10, criticality: 'ReportCriticality' }],
+         selectionField: [{ position: 60 }] }
+  @EndUserText.label: 'Berichtsstatus'
+  reportstatus;
+
+  @UI: { fieldGroup: [{ qualifier: 'Report', position: 20 }] }
+  @EndUserText.label: 'Bericht angehängt am'
+  reportattachedat;
+
+  @UI: { fieldGroup: [{ qualifier: 'Report', position: 30 }] }
+  @EndUserText.label: 'Meldung Bericht'
+  reportmessage;
+
+  @UI: { fieldGroup: [{ qualifier: 'Report', position: 40 }] }
+  @EndUserText.label: 'Praxedo-UUID'
+  praxedouuid;
+
+  @UI.hidden: true
+  reportcriticality;
 
   @UI: { lineItem: [{ position: 100 }], fieldGroup: [{ qualifier: 'Sync', position: 40 }] }
   @EndUserText.label: 'Servicebestätigung'

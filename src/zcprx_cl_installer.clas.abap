@@ -128,19 +128,22 @@ CLASS zcprx_cl_installer IMPLEMENTATION.
         start_time  = '020000' )
       ( name        = 'REPORT'
         template    = 'ZCPRX_JT_REPORT'
-        text        = 'Praxedo: Tagesbericht ins Application Log'
+        text        = 'Praxedo: Berichte an Serviceaufträge anhängen'
         granularity = c_granularity-days
         value       = 1
         start_time  = '060000'
-        parameters  = VALUE #( ( name    = 'P_REPID'
-                                 t_value = VALUE #( ( sign = 'I' option = 'EQ'
-                                                      low  = zcprx_cl_config=>get( zcprx_cl_config=>c_param-report_id ) ) ) ) ) ) ).
+        parameters  = VALUE #( ( name = 'P_CHECK' t_value = VALUE #( ( sign = 'I' option = 'EQ' low = 'X' ) ) )
+                               ( name = 'P_RETRY' t_value = VALUE #( ( sign = 'I' option = 'EQ' low = 'X' ) ) ) ) ) ).
   ENDMETHOD.
 
   METHOD step_config.
-    DATA(lv_count) = zcprx_cl_config=>init_defaults( ).
+    DATA(lv_count)    = zcprx_cl_config=>init_defaults( ).
+    DATA(lv_obsolete) = zcprx_cl_config=>delete_obsolete( ).
     COMMIT WORK.
     mo_log->success( |Konfiguration: { lv_count } Standardwert(e) angelegt, vorhandene Werte unverändert| ).
+    IF lv_obsolete > 0.
+      mo_log->info( |Konfiguration: { lv_obsolete } veraltete Parameter (PATH_*, REPORT_ID) gelöscht| ).
+    ENDIF.
   ENDMETHOD.
 
   METHOD step_connectivity.
@@ -152,7 +155,7 @@ CLASS zcprx_cl_installer IMPLEMENTATION.
       CATCH zcprx_cx_error INTO DATA(lx_praxedo).
         rv_ok = abap_false.
         mo_log->error( |Verbindung Praxedo: { lx_praxedo->get_text( ) }| ).
-        mo_log->error( 'MANUELL: Communication System PRAXEDO + Arrangement für ZCPRX_CS_PRAXEDO anlegen' ).
+        mo_log->error( 'MANUELL: Comm. System PRAXEDO + Arrangement ZCPRX_CS_PRAXEDO (SOAP: Basic, REST v1: keine Auth.)' ).
     ENDTRY.
 
     TRY.
@@ -168,6 +171,9 @@ CLASS zcprx_cl_installer IMPLEMENTATION.
   METHOD step_customer_settings.
     " Parameter, deren leerer Standard fachlich bewusst sein sollte
     DATA(lt_check) = VALUE zcprx_cl_config=>tt_default(
+      ( param = zcprx_cl_config=>c_param-prx_event_type      value = `Praxedo-Einsatztyp (Pflicht für Einsätze)` )
+      ( param = zcprx_cl_config=>c_param-default_item_cat    value = `Praxedo-Artikelkategorie für Artikel ohne Gruppe` )
+      ( param = zcprx_cl_config=>c_param-activity_products   value = `Aktivitätstyp -> Leistungsartikel (leer = DEFAULT_SRV_PRODUCT)` )
       ( param = zcprx_cl_config=>c_param-conf_itemcat_time   value = `Positionstyp Zeiten (leer = SAP-Ermittlung)` )
       ( param = zcprx_cl_config=>c_param-conf_itemcat_mat    value = `Positionstyp Material (leer = SAP-Ermittlung)` )
       ( param = zcprx_cl_config=>c_param-default_srv_product value = `Leistungsartikel ohne Praxedo-Angabe` )
@@ -317,3 +323,4 @@ CLASS zcprx_cl_installer IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+

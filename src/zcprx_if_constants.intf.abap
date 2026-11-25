@@ -52,7 +52,17 @@ INTERFACE zcprx_if_constants PUBLIC.
       delete TYPE c LENGTH 10 VALUE 'DELETE',
       fetch  TYPE c LENGTH 10 VALUE 'FETCH',
       post   TYPE c LENGTH 10 VALUE 'POST',
+      report TYPE c LENGTH 10 VALUE 'REPORT',   " Praxedo-Bericht an Serviceauftrag anhängen
     END OF operation.
+
+  " Bericht (PDF) am Serviceauftrag, Feld REPORT_STATUS von ZCPRXORD
+  " ('' = noch nicht fällig, Einsatz in Praxedo nicht validiert)
+  CONSTANTS:
+    BEGIN OF report_status,
+      open     TYPE c LENGTH 12 VALUE 'OPEN',
+      attached TYPE c LENGTH 12 VALUE 'ATTACHED',
+      error    TYPE c LENGTH 12 VALUE 'ERROR',
+    END OF report_status.
 
   " Application-Log-Objekt (ADT: New > Application Log Object)
   CONSTANTS:

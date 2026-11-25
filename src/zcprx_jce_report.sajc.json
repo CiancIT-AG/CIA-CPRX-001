@@ -10,11 +10,16 @@
   },
   "parameters": [
     {
-      "name": "P_REPID",
-      "mandatory": true
+      "name": "P_CHECK"
     },
     {
-      "name": "P_DATE"
+      "name": "P_DAYS"
+    },
+    {
+      "name": "P_RETRY"
+    },
+    {
+      "name": "P_MAX"
     }
   ]
 }

@@ -18,6 +18,7 @@
     <APP_ID>ZCPRX_ADMIN_EXT</APP_ID>
     <APP_TYPE>EXT</APP_TYPE>
     <ABAP_LANGUAGE_VERSION>5</ABAP_LANGUAGE_VERSION>
+    <UI_APP_ID>ZCPRX_ADMIN_UI5R</UI_APP_ID>
     <SERVICE>
      <item>
       <REL_NAME>ZCPRX_UI_ADMIN_O4</REL_NAME>
@@ -25,6 +26,7 @@
       <APP_ID>ZCPRX_ADMIN_EXT</APP_ID>
       <SRVC_NAME>614B8841440C7093ACA808B2DA7257</SRVC_NAME>
       <SRVC_TYPE>HT</SRVC_TYPE>
+      <UIAD_SRC>ZCPRX_ADMIN_UI5R</UIAD_SRC>
       <TEXT>Praxedo Adapter - Service Binding</TEXT>
       <TYPE_TEXT>OData V4</TYPE_TEXT>
      </item>
@@ -47,23 +49,23 @@
           <VALUE>Create or generate,Change,Display,Delete,Execute</VALUE>
           <VALUES>
            <item>
-            <UUID>+hY+aKqAH9G6g8WUe897Iw==</UUID>
+            <UUID>+hY+aKqAH9G6mWuHvKX7MQ==</UUID>
             <LOW_VALUE>01</LOW_VALUE>
            </item>
            <item>
-            <UUID>+hY+aKqAH9G6g8WUe8+bIw==</UUID>
+            <UUID>+hY+aKqAH9G6mWuHvKYbMQ==</UUID>
             <LOW_VALUE>02</LOW_VALUE>
            </item>
            <item>
-            <UUID>+hY+aKqAH9G6g8WUe8+7Iw==</UUID>
+            <UUID>+hY+aKqAH9G6mWuHvKY7MQ==</UUID>
             <LOW_VALUE>03</LOW_VALUE>
            </item>
            <item>
-            <UUID>+hY+aKqAH9G6g8WUe8/bIw==</UUID>
+            <UUID>+hY+aKqAH9G6mWuHvKZbMQ==</UUID>
             <LOW_VALUE>06</LOW_VALUE>
            </item>
            <item>
-            <UUID>+hY+aKqAH9G6g8WUe8/7Iw==</UUID>
+            <UUID>+hY+aKqAH9G6mWuHvKZ7MQ==</UUID>
             <LOW_VALUE>16</LOW_VALUE>
            </item>
           </VALUES>

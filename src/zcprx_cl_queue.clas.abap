@@ -287,6 +287,8 @@ CLASS zcprx_cl_queue IMPLEMENTATION.
             NEW zcprx_cl_inbound( )->fetch_order( to_uuid( is_queue-object_key ) ).
           WHEN op-post.
             NEW zcprx_cl_posting( )->post_order( to_uuid( is_queue-object_key ) ).
+          WHEN op-report.
+            NEW zcprx_cl_report( )->attach( to_uuid( is_queue-object_key ) ).
           WHEN OTHERS.
             zcprx_cx_error=>raise( iv_text = |Unbekannte Operation { is_queue-operation }| iv_permanent = abap_true ).
         ENDCASE.
@@ -309,3 +311,4 @@ CLASS zcprx_cl_queue IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+

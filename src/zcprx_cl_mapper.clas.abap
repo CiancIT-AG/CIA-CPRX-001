@@ -92,9 +92,19 @@ CLASS zcprx_cl_mapper IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD from_iso.
+    " 2026-11-24T10:15:30Z | 2026-11-24T10:15:30.123+01:00 | 2026-11-24T10:15:30
+    " Offset wird nach UTC umgerechnet (Praxedo liefert Ortszeit mit Offset)
     CHECK strlen( iv_value ) >= 19.
     TRY.
         rv_value = CONV utclong( substring( val = iv_value len = 19 ) ).
+        IF strlen( iv_value ) > 19.
+          FIND PCRE `([+-])(\d{2}):?(\d{2})$` IN iv_value SUBMATCHES DATA(lv_sign) DATA(lv_hours) DATA(lv_minutes).
+          IF sy-subrc = 0.
+            DATA(lv_offset) = CONV i( lv_hours ) * 3600 + CONV i( lv_minutes ) * 60.
+            rv_value = utclong_add( val     = rv_value
+                                    seconds = COND i( WHEN lv_sign = '+' THEN 0 - lv_offset ELSE lv_offset ) ).
+          ENDIF.
+        ENDIF.
       CATCH cx_root.
         CLEAR rv_value.
     ENDTRY.
@@ -109,3 +119,4 @@ CLASS zcprx_cl_mapper IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+

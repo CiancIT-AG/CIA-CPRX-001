@@ -54,6 +54,12 @@ CLASS lhc_order DEFINITION INHERITING FROM cl_abap_behavior_handler.
 
     METHODS setpostingresult FOR MODIFY
       IMPORTING keys FOR ACTION Order~setPostingResult RESULT result.
+
+    METHODS attachreport FOR MODIFY
+      IMPORTING keys FOR ACTION Order~attachReport RESULT result.
+
+    METHODS setreportresult FOR MODIFY
+      IMPORTING keys FOR ACTION Order~setReportResult RESULT result.
 ENDCLASS.
 
 CLASS lhc_order IMPLEMENTATION.
@@ -76,6 +82,8 @@ CLASS lhc_order IMPLEMENTATION.
                       %action-post              = lv_execute
                       %action-resetError        = lv_execute
                       %action-cancel            = lv_execute
+                      %action-attachReport      = lv_execute
+                      %action-setReportResult   = lv_execute
                       %action-setSyncResult     = lv_execute
                       %action-setInboundData    = lv_execute
                       %action-setPostingResult  = lv_execute ).
@@ -85,7 +93,7 @@ CLASS lhc_order IMPLEMENTATION.
     DATA(st) = zcprx_if_constants=>order_status.
 
     READ ENTITIES OF zcprx_r_order IN LOCAL MODE
-      ENTITY Order FIELDS ( Status PraxedoId ) WITH CORRESPONDING #( keys )
+      ENTITY Order FIELDS ( Status PraxedoId PraxedoStatus ReportStatus ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_order)
       FAILED failed.
 
@@ -107,6 +115,11 @@ CLASS lhc_order IMPLEMENTATION.
                               OR ls_order-Status IS INITIAL ).
       DATA(lv_cancel) = xsdbool( lv_draft = abap_false
                              AND ( ls_order-Status = st-new OR ls_order-Status = st-sent OR ls_order-Status = st-error ) ).
+      " Bericht: Einsatz in Praxedo validiert (REPORT_STATUSES); erneut anhängen erlaubt
+      DATA(lv_report) = xsdbool( lv_draft = abap_false
+                             AND ls_order-PraxedoId IS NOT INITIAL
+                             AND ls_order-Status <> st-cancelled
+                             AND zcprx_cl_report=>is_report_status( ls_order-PraxedoStatus ) = abap_true ).
 
       APPEND VALUE #(
         %tky                     = ls_order-%tky
@@ -120,6 +133,7 @@ CLASS lhc_order IMPLEMENTATION.
         %action-post             = COND #( WHEN lv_post  = abap_true THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled )
         %action-resetError       = COND #( WHEN lv_reset  = abap_true THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled )
         %action-cancel           = COND #( WHEN lv_cancel = abap_true THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled )
+        %action-attachReport     = COND #( WHEN lv_report = abap_true THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled )
       ) TO result.
     ENDLOOP.
   ENDMETHOD.
@@ -398,6 +412,68 @@ CLASS lhc_order IMPLEMENTATION.
         <ls_update>-PraxedoId          = ls_key-%param-PraxedoId.
         <ls_update>-%control-PraxedoId = if_abap_behv=>mk-on.
       ENDIF.
+      IF ls_key-%param-PraxedoUUID IS NOT INITIAL.
+        <ls_update>-PraxedoUUID          = ls_key-%param-PraxedoUUID.
+        <ls_update>-%control-PraxedoUUID = if_abap_behv=>mk-on.
+      ENDIF.
+      " nur setzen, wenn fällig (OPEN); ATTACHED/ERROR bleiben sonst stehen
+      IF ls_key-%param-ReportStatus IS NOT INITIAL.
+        <ls_update>-ReportStatus           = ls_key-%param-ReportStatus.
+        <ls_update>-%control-ReportStatus  = if_abap_behv=>mk-on.
+        <ls_update>-ReportMessage          = ''.
+        <ls_update>-%control-ReportMessage = if_abap_behv=>mk-on.
+      ENDIF.
+    ENDLOOP.
+
+    MODIFY ENTITIES OF zcprx_r_order IN LOCAL MODE
+      ENTITY Order UPDATE FROM lt_update.
+
+    READ ENTITIES OF zcprx_r_order IN LOCAL MODE
+      ENTITY Order ALL FIELDS WITH CORRESPONDING #( keys ) RESULT DATA(lt_result).
+    result = VALUE #( FOR r IN lt_result ( %tky = r-%tky %param = r ) ).
+  ENDMETHOD.
+
+  METHOD attachreport.
+    " Queue-Eintrag ORDER/REPORT (save_modified), Status sofort OPEN
+    LOOP AT keys INTO DATA(ls_key).
+      APPEND VALUE #( object_type = zcprx_if_constants=>object_type-order
+                      operation   = zcprx_if_constants=>operation-report
+                      object_key  = |{ ls_key-OrderUUID }| ) TO lcl_buffer=>mt_entries.
+    ENDLOOP.
+
+    MODIFY ENTITIES OF zcprx_r_order IN LOCAL MODE
+      ENTITY Order UPDATE FIELDS ( ReportStatus ReportMessage )
+      WITH VALUE #( FOR k IN keys ( %tky          = k-%tky
+                                    ReportStatus  = zcprx_if_constants=>report_status-open
+                                    ReportMessage = 'Bericht wird angehängt' ) ).
+
+    READ ENTITIES OF zcprx_r_order IN LOCAL MODE
+      ENTITY Order ALL FIELDS WITH CORRESPONDING #( keys ) RESULT DATA(lt_result).
+    result = VALUE #( FOR r IN lt_result ( %tky = r-%tky %param = r ) ).
+
+    APPEND new_message_with_text( severity = if_abap_behv_message=>severity-information
+                                  text     = 'Bericht wird im Hintergrund an den Serviceauftrag angehängt' ) TO reported-%other.
+  ENDMETHOD.
+
+  METHOD setreportresult.
+    DATA lt_update TYPE TABLE FOR UPDATE zcprx_r_order\\Order.
+    DATA lv_now    TYPE timestampl.
+    GET TIME STAMP FIELD lv_now.
+
+    LOOP AT keys INTO DATA(ls_key).
+      APPEND VALUE #( %tky                   = ls_key-%tky
+                      ReportStatus           = ls_key-%param-ReportStatus
+                      ReportMessage          = ls_key-%param-ReportMessage
+                      %control-ReportStatus  = if_abap_behv=>mk-on
+                      %control-ReportMessage = if_abap_behv=>mk-on ) TO lt_update ASSIGNING FIELD-SYMBOL(<ls_update>).
+      IF ls_key-%param-ReportStatus = zcprx_if_constants=>report_status-attached.
+        <ls_update>-ReportAttachedAt          = lv_now.
+        <ls_update>-%control-ReportAttachedAt = if_abap_behv=>mk-on.
+      ENDIF.
+      IF ls_key-%param-PraxedoUUID IS NOT INITIAL.
+        <ls_update>-PraxedoUUID          = ls_key-%param-PraxedoUUID.
+        <ls_update>-%control-PraxedoUUID = if_abap_behv=>mk-on.
+      ENDIF.
     ENDLOOP.
 
     MODIFY ENTITIES OF zcprx_r_order IN LOCAL MODE
@@ -537,3 +613,4 @@ CLASS lsc_order IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+

@@ -26,6 +26,14 @@ CLASS zcprx_cl_inbound DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS is_completed
       IMPORTING iv_status        TYPE string
       RETURNING VALUE(rv_result) TYPE abap_bool.
+
+    METHODS report_due
+      IMPORTING iv_praxedo_status TYPE csequence
+                iv_report_status  TYPE csequence
+      RETURNING VALUE(rv_result)  TYPE abap_bool.
+
+    METHODS fill_units
+      CHANGING ct_materials TYPE zcprx_if_praxedo_api=>tt_material.
 ENDCLASS.
 
 CLASS zcprx_cl_inbound IMPLEMENTATION.
@@ -84,26 +92,45 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
     store( mo_praxedo->get_order( CONV #( lv_praxedo_id ) ) ).
   ENDMETHOD.
 
+  METHOD report_due.
+    " Bericht fällig: Praxedo-Status in REPORT_STATUSES und noch nicht angehängt
+    rv_result = xsdbool( zcprx_cl_report=>is_report_status( iv_praxedo_status ) = abap_true
+                     AND iv_report_status <> zcprx_if_constants=>report_status-attached ).
+  ENDMETHOD.
+
+  METHOD fill_units.
+    " Praxedo kennt keine Mengeneinheit -> Basismengeneinheit des Produkts
+    LOOP AT ct_materials ASSIGNING FIELD-SYMBOL(<ls_material>) WHERE unit IS INITIAL AND product IS NOT INITIAL.
+      DATA lv_product TYPE I_Product-Product.
+      lv_product = <ls_material>-product.
+      SELECT SINGLE BaseUnit FROM I_Product WHERE Product = @lv_product INTO @DATA(lv_unit).
+      IF sy-subrc = 0.
+        <ls_material>-unit = lv_unit.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
   METHOD store.
     DATA(st) = zcprx_if_constants=>order_status.
-    DATA lv_uuid      TYPE sysuuid_x16.
-    DATA lv_status    TYPE c LENGTH 12.
-    DATA lv_index     TYPE i.
+    DATA lv_uuid          TYPE sysuuid_x16.
+    DATA lv_status        TYPE c LENGTH 12.
+    DATA lv_report_status TYPE c LENGTH 12.
 
     " 1) Einsatz ermitteln: Praxedo-ID, sonst Serviceauftrag/Position
-    SELECT SINGLE OrderUUID, Status FROM zcprx_r_order
+    SELECT SINGLE OrderUUID, Status, ReportStatus FROM zcprx_r_order
       WHERE PraxedoId = @is_praxedo-id
-      INTO (@lv_uuid, @lv_status).
+      INTO (@lv_uuid, @lv_status, @lv_report_status).
 
     IF sy-subrc <> 0 AND is_praxedo-service_order IS NOT INITIAL.
-      SELECT SINGLE OrderUUID, Status FROM zcprx_r_order
+      SELECT SINGLE OrderUUID, Status, ReportStatus FROM zcprx_r_order
         WHERE ServiceOrder     = @is_praxedo-service_order
           AND ServiceOrderItem = @is_praxedo-service_order_item
           AND Status          <> @st-cancelled
-        INTO (@lv_uuid, @lv_status).
+        INTO (@lv_uuid, @lv_status, @lv_report_status).
     ENDIF.
 
-    DATA(lv_completed) = is_completed( is_praxedo-status ).
+    DATA(lv_completed)  = is_completed( is_praxedo-status ).
+    DATA(lv_report_due) = report_due( iv_praxedo_status = is_praxedo-status iv_report_status = lv_report_status ).
 
     " 2) Unbekannt -> nur abgeschlossene Aufträge mit Serviceauftragsbezug anlegen
     IF lv_uuid IS INITIAL.
@@ -130,9 +157,9 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
     ENDIF.
 
     " 3) Statusprüfung
-    IF lv_status = st-processed OR lv_status = st-cancelled.
+    IF lv_status = st-cancelled.
       ROLLBACK ENTITIES.
-      RETURN.                                     " bereits verbucht / storniert
+      RETURN.                                     " storniert
     ENDIF.
     IF lv_status = st-in_process.
       ROLLBACK ENTITIES.
@@ -140,7 +167,9 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
     ENDIF.
 
     " 4) Zeiten/Materialien ersetzen (nur nicht verbuchte) – nur wenn abgeschlossen
-    IF lv_completed = abap_true.
+    "    und noch nicht verbucht. Verbuchte Einsätze bekommen nur noch
+    "    Praxedo-Status/UUID (z. B. VALIDATED -> Bericht anhängen).
+    IF lv_completed = abap_true AND lv_status <> st-processed.
       READ ENTITIES OF zcprx_r_order
         ENTITY Order BY \_Time     FIELDS ( IsPosted ) WITH VALUE #( ( OrderUUID = lv_uuid ) ) RESULT DATA(lt_time)
         ENTITY Order BY \_Material FIELDS ( IsPosted ) WITH VALUE #( ( OrderUUID = lv_uuid ) ) RESULT DATA(lt_material).
@@ -148,6 +177,8 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
       DELETE lt_material WHERE IsPosted = abap_true.
 
       DATA(lv_default_product) = zcprx_cl_config=>get( zcprx_cl_config=>c_param-default_srv_product ).
+      DATA(lt_new_material)    = is_praxedo-materials.
+      fill_units( CHANGING ct_materials = lt_new_material ).
 
       MODIFY ENTITIES OF zcprx_r_order
         ENTITY OrderTime     DELETE FROM VALUE #( FOR old_t IN lt_time     ( %tky = old_t-%tky ) )
@@ -168,7 +199,7 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
           CREATE BY \_Material
             FIELDS ( PraxedoLineId Product Quantity QuantityUnit Plant StorageLocation )
             WITH VALUE #( ( OrderUUID = lv_uuid
-                            %target   = VALUE #( FOR m IN is_praxedo-materials INDEX INTO j
+                            %target   = VALUE #( FOR m IN lt_new_material INDEX INTO j
                                           ( %cid            = |M{ j }|
                                             PraxedoLineId   = m-line_id
                                             Product         = m-product
@@ -184,13 +215,18 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    " 5) Status: abgeschlossen -> RECEIVED (verbuchbar), sonst Status beibehalten
+    " 5) Status: abgeschlossen -> RECEIVED (verbuchbar), verbucht bleibt PROCESSED,
+    "    sonst Status beibehalten. Bericht fällig -> ReportStatus OPEN.
     MODIFY ENTITIES OF zcprx_r_order
       ENTITY Order EXECUTE setInboundData
       FROM VALUE #( ( OrderUUID = lv_uuid
                       %param    = VALUE #( PraxedoId     = is_praxedo-id
+                                           PraxedoUUID   = is_praxedo-uuid
                                            PraxedoStatus = is_praxedo-status
-                                           Status        = COND #( WHEN lv_completed = abap_true THEN st-received
+                                           ReportStatus  = COND #( WHEN lv_report_due = abap_true
+                                                                   THEN zcprx_if_constants=>report_status-open )
+                                           Status        = COND #( WHEN lv_status = st-processed THEN lv_status
+                                                                   WHEN lv_completed = abap_true THEN st-received
                                                                    WHEN lv_status IS INITIAL     THEN st-sent
                                                                    ELSE lv_status )
                                            MessageText   = `` ) ) )
@@ -206,6 +242,16 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
     IF ls_commit_failed IS NOT INITIAL.
       zcprx_cx_error=>raise( |Rückmeldung Praxedo { is_praxedo-id } konnte nicht gespeichert werden| ).
     ENDIF.
+
+    " 6) Bericht anhängen entkoppelt über die Queue (Job OUTBOUND bzw. REPORT
+    "    verarbeitet den Eintrag; kein bgPF, da store() selbst im bgPF laufen kann)
+    IF lv_report_due = abap_true.
+      zcprx_cl_queue=>enqueue( it_entries    = VALUE #( ( object_type = zcprx_if_constants=>object_type-order
+                                                              operation   = zcprx_if_constants=>operation-report
+                                                              object_key  = |{ lv_uuid }| ) )
+                                   iv_start_bgpf = abap_false ).
+      COMMIT WORK.
+    ENDIF.
     rv_stored = abap_true.
   ENDMETHOD.
 
@@ -218,3 +264,4 @@ CLASS zcprx_cl_inbound IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+

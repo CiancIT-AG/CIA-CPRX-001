@@ -11,12 +11,24 @@
   "parameters": {
     "singleValueParameters": [
       {
-        "name": "P_DATE",
+        "name": "P_CHECK",
+        "value": ""
+      },
+      {
+        "name": "P_DAYS",
+        "value": ""
+      },
+      {
+        "name": "P_MAX",
         "value": ""
       },
       {
         "name": "P_REPID",
         "value": "DAILY"
+      },
+      {
+        "name": "P_RETRY",
+        "value": ""
       }
     ]
   }
